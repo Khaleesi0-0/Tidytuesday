@@ -1,0 +1,74 @@
+---
+title: "2025-01-25"
+format: html
+editor: visual
+---
+
+## The History of Himalayan Mountaineering Expeditions
+
+
+```{r}
+exped <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/exped_tidy.csv')
+peaks <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-01-21/peaks_tidy.csv')
+
+```
+
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+# join two dataset
+exped <- exped |>
+  mutate(PEAKID = as.character(PEAKID))
+
+peaks <- peaks |>
+  mutate(PEAKID = as.character(PEAKID))
+
+exped_joined <- exped |>
+  left_join(peaks, by = "PEAKID")
+exped_joined <- exped_joined |>
+  mutate(overall_success = SUCCESS1 | SUCCESS2 | SUCCESS3 | SUCCESS4)
+
+```
+## Visualization 1: Expedition Duration vs. Peak Height
+```{r}
+plot1 <- ggplot(exped_joined, aes(x = HEIGHTM, y = TOTDAYS, color = REGION_FACTOR)) +
+  geom_point(alpha = 0.6, na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE) +
+  labs(
+    title = "Expedition Duration vs. Peak Height",
+    subtitle = "Exploratory Analysis (no claims of causation)",
+    x = "Peak Height (meters)",
+    y = "Total Expedition Days",
+    color = "Region"
+  ) +
+  theme_minimal()
+
+print(plot1)
+```
+## Visualization 2: Expedition Counts by Overall Success
+```{r}
+success_summary <- exped_joined |>
+  group_by(overall_success) |>
+  summarise(count = n()) |>
+  ungroup()
+
+plot2 <- ggplot(success_summary, aes(x = factor(overall_success), y = count, fill = factor(overall_success))) +
+  geom_col() +
+  labs(
+    title = "Number of Expeditions by Overall Success",
+    subtitle = "Success defined as at least one successful route",
+    x = "Overall Success (FALSE = No, TRUE = Yes)",
+    y = "Number of Expeditions",
+    fill = "Overall Success"
+  ) +
+  scale_fill_manual(values = c("FALSE" = "tomato", "TRUE" = "seagreen")) +
+  theme_minimal()
+
+print(plot2)
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
