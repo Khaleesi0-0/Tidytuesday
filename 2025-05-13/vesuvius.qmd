@@ -4,8 +4,6 @@ format: html
 editor: visual
 ---
 
-
-
 ```{r}
 # Using R
 # Option 1: tidytuesdayR R package 
@@ -18,10 +16,10 @@ vesuvius <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/t
 library(tidyverse)
 glimpse(vesuvius)
 ```
+
 # Research Question
 
 How does event depth relate to reported duration‐magnitude at Mount Vesuvius (2011–present)?
-
 
 ```{r}
 ves2 <- vesuvius %>% 
@@ -53,7 +51,7 @@ ggplot(ves2, aes(
     subtitle = "Log-depth spread; LOESS trend (dashed) shows little depth–MD relationship",
     x        = "Depth (km) — log scale",
     y        = "Duration-Magnitude (MD)",
-    caption  = "TidyTuesday 2025-05-13 | github.com/rfordatascience/tidytuesday"
+    caption  = "TidyTuesday 2025-05-13 | github.com/tidytuesday"
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -62,14 +60,11 @@ ggplot(ves2, aes(
     plot.caption    = element_text(size = 8, color = "gray40")
   )
 ```
-Thought for a couple of seconds
 
-
-**Plot takeaways:** Most Vesuvius quakes are ultra-shallow (<1 km) yet span the full MD range, and the LOESS trend is essentially flat (with wide confidence at deeper depths). The colour gradient shows newer (yellow) events clustering ever more densely at shallow depths, reflecting improved detection of micro-tremors.
+**Plot takeaways:** Most Vesuvius quakes are ultra-shallow (\<1 km) yet span the full MD range, and the LOESS trend is essentially flat (with wide confidence at deeper depths). The colour gradient shows newer (yellow) events clustering ever more densely at shallow depths, reflecting improved detection of micro-tremors.
 
 **Data caveats:**
 
-* ≈50% of records lack `depth_km`, so our sample is biased toward events with measurable depths.
-* Every MD has ±0.3 uncertainty—large relative to its 1–2 unit span—masking subtle depth–magnitude patterns.
-* Shallow quakes are easier to detect than deep ones, creating a selection bias; and mixing “preliminary” with “revised” entries may introduce inconsistencies.
-
+-   ≈50% of records lack `depth_km`, so our sample is biased toward events with measurable depths.
+-   Every MD has ±0.3 uncertainty—large relative to its 1–2 unit span—masking subtle depth–magnitude patterns.
+-   Shallow quakes are easier to detect than deep ones, creating a selection bias; and mixing “preliminary” with “revised” entries may introduce inconsistencies.

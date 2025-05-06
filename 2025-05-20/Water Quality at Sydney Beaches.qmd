@@ -1,0 +1,96 @@
+---
+title: "2025-05-20"
+format: html
+editor: visual
+---
+
+```{r}
+
+water_quality <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-05-20/water_quality.csv')
+weather <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-05-20/weather.csv')
+```
+```{r}
+library(tidyverse)
+glimpse(water_quality)
+glimpse(weather)
+```
+# Research question
+
+Does daily rainfall influence bacterial contamination (enterococci) at Sydney swim sites?
+
+
+```{r}
+df_site <- water_quality %>%
+  filter(!is.na(enterococci_cfu_100ml)) %>%
+  group_by(region, date) %>%
+  summarize(
+    avg_entero = mean(enterococci_cfu_100ml, na.rm = TRUE),
+    avg_temp   = mean(water_temperature_c,    na.rm = TRUE),
+    avg_cond   = mean(conductivity_ms_cm,     na.rm = TRUE),
+    n_samples  = n(),
+    .groups     = "drop"
+  ) %>%
+  left_join(weather %>% select(date, precipitation_mm), by = "date") %>%
+  filter(!is.na(precipitation_mm))
+
+# Pick top 4 regions by sample count
+top_regions <- df_site %>%
+  count(region, sort = TRUE) %>%
+  slice_head(n = 4) %>%
+  pull(region)
+
+df_top <- df_site %>% filter(region %in% top_regions)
+
+# Plot
+ggplot(df_top, aes(
+    x = precipitation_mm,
+    y = avg_entero,
+    colour = avg_temp,
+    size = avg_cond
+  )) +
+  geom_point(alpha = 0.7) +
+  scale_y_log10(
+    name   = "Avg Enterococci (CFU/100 mL)\n(log scale)",
+    breaks = c(10, 100, 500, 1000)
+  ) +
+  scale_x_continuous(name = "Daily Precipitation (mm)") +
+  scale_colour_viridis_c(
+    option = "plasma",
+    name   = "Water Temp (°C)"
+  ) +
+  scale_size_continuous(
+    range = c(1, 6),
+    name  = "Conductivity\n(mS/cm)"
+  ) +
+  geom_smooth(
+    method    = "lm",
+    aes(weight = n_samples),
+    se        = FALSE,
+    colour    = "black",
+    linetype  = "dashed",
+    linewidth = 0.5
+  ) +
+  facet_wrap(~ region, scales = "free") +
+  labs(
+    title    = "Rainfall, Bacteria & Water Conditions at Sydney Swim Sites",
+    subtitle = "Site-day means: enterococci (log), coloured by temp, sized by conductivity",
+    caption  = "TidyTuesday 2025-05-20 | github.com /tidytuesday"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    plot.subtitle   = element_text(margin = margin(b = 8)),
+    plot.caption    = element_text(size = 8, color = "gray40")
+  )
+```
+
+
+**What the plot shows:** Across all four Sydney regions, heavier rain days generally correspond to higher average enterococci (upward‐sloping fits), with warmer water and greater conductivity often amplifying contamination; the strength of these associations varies by region.
+
+**Key caveats:**
+
+* **Precipitation** comes from one station but applies to many sites, so local downpours may be missed.
+* **Site‐day averages** mask extreme values at individual beaches.
+* **Sampling times** vary, so rain–sample timing mismatches can blur true rain impacts.
+
+
